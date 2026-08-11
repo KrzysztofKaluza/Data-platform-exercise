@@ -1,0 +1,4 @@
+maintenance_id,bike_id,maintenance_date,cost
+1,100,2025-01-10,150
+2,101,2025-01-12,400
+3,104,2025-01-15,250

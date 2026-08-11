@@ -1,0 +1,73 @@
+version: 2
+models:
+  - name: stg_bikes
+    description: "Table stores information about company bikes"
+    columns:
+      - name: "bike_id"
+        description: "Identification number of each bike"
+        tests:
+          - unique
+          - not_null
+      - name: "bike_type"
+        description: "Type of a bike"
+      - name: "purchase_year"
+        description: "Year when the bike has been purchased"
+  - name: stg_customers
+    description: "Table stores information about the customers"
+    columns:
+      - name: "customer_id"
+        description: "Identification number of each customer"
+        tests:
+          - unique
+          - not_null
+      - name: "name"
+        description: "Customer name"
+      - name: "city"
+        description: "City where customer lives"
+  - name: stg_stations
+    description: "Table stores information about the bike stations"
+    columns:
+      - name: "station_id"
+        description: "Identification number of Bike stations"
+        tests:
+          - unique
+          - not_null
+      - name: "station_name"
+        description: "Name of a station"
+      - name: "city"
+        description: "City where the station is located"
+  - name: stg_rentals_enriched
+    description: "Table stores information the rentals made by customers"
+    columns:
+      - name: "rental_id"
+        description: "Identification number of a rental transaction"
+      - name: "customer_id"
+        description: "Identification number of a customer"
+        tests:
+          - relationships:
+              to: "{{ ref('stg_customers') }}"
+              field: customer_id
+      - name: "bike_id"
+        description: "Identification number of a bike"
+        tests:
+          - relationships:
+              to: "{{ ref('stg_bikes') }}"
+              field: bike_id
+      - name: "start_station_id"
+        description: "Identification number of a start station"
+      - name: "end_station_id"
+        description: "Identification number of a end station"
+      - name: "customer_city"
+        description: "City where customer rented bike"
+      - name: "bike_type"
+        description: "The type of rented bike"
+      - name: "start_station_name"
+        description: "Name of a start station"
+      - name: "end_station_name"
+        description: "Name of an end station"
+      - name: "start_time"
+        description: "Start timestamp"
+      - name: "end_time"
+        description: "End timestamp"
+      - name: "rental_duration_minutes"
+        description: "It answears the question how long the rental took"

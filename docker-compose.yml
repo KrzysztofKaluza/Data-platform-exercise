@@ -1,0 +1,95 @@
+version: '3.8'
+
+networks:
+  datalake-network:
+    driver: bridge
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: warehouse
+    ports:
+      - "5432:5432"
+    networks:
+      - datalake-network
+
+  minio:
+    image: minio/minio
+    container_name: minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio123
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    networks:
+      - datalake-network
+
+  # --- AUTOMATYCZNE TWORZENIE BUCKETÓW BRONZE, SILVER, GOLD ---
+  create-buckets:
+    image: minio/mc:latest
+    container_name: minio-create-buckets
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      until (/usr/bin/mc alias set myminio http://minio:9000 minio minio123) do echo 'Czekam na uruchomienie MinIO...' && sleep 1; done;
+      /usr/bin/mc mb --ignore-existing myminio/bronze;
+      /usr/bin/mc mb --ignore-existing myminio/silver;
+      /usr/bin/mc mb --ignore-existing myminio/gold;
+      echo 'Buckety bronze, silver oraz gold zostaly utworzone!';
+      exit 0;
+      "
+    networks:
+      - datalake-network
+  trino:
+      image: trinodb/trino:450
+      container_name: trino
+      ports:
+        - "8081:8080"
+      volumes:
+        - ./trino/catalog:/etc/trino/catalog
+      depends_on:
+        - minio
+        - create-buckets
+      networks:
+        - datalake-network
+
+  spark:
+    build:
+      context: ./spark
+      dockerfile: Dockerfile
+    image: custom-spark:3.5.1
+    container_name: spark
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./spark-apps:/opt/spark-apps
+      - ./data:/opt/data
+    command: tail -f /dev/null
+    networks:
+      - datalake-network
+
+
+  dbt:
+    build:
+      context: ./dbt
+      dockerfile: Dockerfile
+    container_name: dbt
+    working_dir: /app
+    ports:
+      - "8082:8080"
+    volumes:
+      - ./dbt:/app
+      - ./dbt/profiles:/root/.dbt
+    depends_on:
+      - trino
+    stdin_open: true
+    tty: true
+    networks:
+      - datalake-network

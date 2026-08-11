@@ -1,0 +1,12 @@
+version: 2
+
+sources:
+  - name: silver
+    schema: silver
+
+    tables:
+      - name: rentals_enriched
+      - name: bikes
+      - name: customers
+      - name: stations
+      

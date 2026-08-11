@@ -1,0 +1,13 @@
+data_platform/
+
+data/*.parquet/
+
+__pycache__/
+*.py[cod]
+*$py.class
+
+target/
+*.jar
+
+.vscode/
+.devcontainer/
