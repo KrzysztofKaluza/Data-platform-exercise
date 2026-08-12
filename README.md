@@ -138,3 +138,10 @@ Key metrics covered:
 * **Station Performance:** Identifies high-traffic hubs (e.g., *Centrum*, *Stare Miasto*) and average trip durations per station (`mart_station_usage`).
 * **Marts Integration:** Direct table view showcasing underlying Gold-layer metrics (`rentals_count`, `avg_duration`) consumed by BI widgets
 
+## Lessons Learned
+- Docker networking between Spark, Trino, dbt and Airflow containers
+- Apache Iceberg integrations with MinIO object storage
+- Trino catalog configuration for Iceberg tables
+- dbt materialization issues with Iceberg JDBC catalogs
+- End-to-End orchestration of Spark and dbt workflows using Airflow
+- Designing a Medalion Architecture using physically separated Bronze, Silver and Gold buckets
