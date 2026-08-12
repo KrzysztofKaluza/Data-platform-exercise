@@ -114,3 +114,18 @@ services:
 
     stdin_open: true
     tty: true
+
+  metabase:
+    image: metabase/metabase:latest
+    container_name: metabase
+    networks:
+      - datalake-network
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./metabase-data:/metabase-data
+    environment:
+      - MB_DB_FILE= /metabase-data/metabase.dbt
+    depends_on:
+      - trino
+  
