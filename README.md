@@ -31,6 +31,10 @@ The platform follows a Medallion Architecture pattern to structure data processi
 
 ![Architecture](docs/architecture.png)
 
+### Airflow DAG
+![Airflow DAG](docs/airflow_dag.png)
+### dbt Lineage
+![dbt Lineage](docs/dbt_lineage.png)
 ## 🌟 Key Features
 * **ACID Lakehouse Storage:** Full transactional support and schema enforcement using Apache Iceberg over object storage (MinIO).
 * **Automated Data Quality & Lineage:** End-to-end lineage tracking and automated data transformations with dbt Core. Data Quality testing with use of dbt.

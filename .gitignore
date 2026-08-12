@@ -12,5 +12,6 @@ target/
 .vscode/
 
 airflow/logs/
+dbt/logs/
 
 *.drawio
