@@ -30,7 +30,6 @@ services:
     networks:
       - datalake-network
 
-  # --- AUTOMATYCZNE TWORZENIE BUCKETÓW BRONZE, SILVER, GOLD ---
   create-buckets:
     image: minio/mc:latest
     container_name: minio-create-buckets
@@ -125,7 +124,7 @@ services:
     volumes:
       - ./metabase-data:/metabase-data
     environment:
-      - MB_DB_FILE= /metabase-data/metabase.dbt
+      - MB_DB_FILE=/metabase-data/metabase.dbt
     depends_on:
       - trino
   

@@ -1,4 +1,5 @@
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from airflow.providers.standard.operators.bash import BashOperator
 
@@ -6,7 +7,7 @@ from airflow import DAG
 
 with DAG(
     dag_id="bike_platform",
-    start_date=(datetime(2026, 8, 1)),
+    start_date=(datetime(2026, 8, 1, tzinfo=ZoneInfo("Europe/Warsaw"))),
     schedule=None,
     catchup=False,
     tags=["data_platform"],

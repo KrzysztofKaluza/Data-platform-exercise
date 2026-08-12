@@ -1,0 +1,33 @@
+{
+  "name": "Spark Silver Pipeline Dev",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "spark",
+  "workspaceFolder": "/opt/spark-apps",
+  "remoteUser": "root",
+
+  "containerEnv": {
+    "SPARK_HOME": "/opt/spark",
+    "PYTHONPATH": "/opt/spark/python:/opt/spark/python/lib/py4j-0.10.9.7-src.zip"
+  },
+
+  "updateContentCommand": "echo 'export PYTHONPATH=/opt/spark/python:/opt/spark/python/lib/py4j-0.10.9.7-src.zip:$PYTHONPATH' >> ~/.bashrc",
+
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/bin/python3",
+        "python.analysis.extraPaths": [
+          "/opt/spark/python",
+          "/opt/spark/python/lib/py4j-0.10.9.7-src.zip"
+        ],
+        "terminal.integrated.env.linux": {
+          "PYTHONPATH": "/opt/spark/python:/opt/spark/python/lib/py4j-0.10.9.7-src.zip"
+        }
+      },
+      "extensions": [
+        "ms-python.python",
+        "ms-python.debugpy"
+      ]
+    }
+  }
+}

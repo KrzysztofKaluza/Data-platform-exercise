@@ -5,18 +5,15 @@ from pyspark.sql import functions as F
 def prepare_spark_session():
     return (
         SparkSession.builder.appName("Silver")
-        # --- Konfiguracja S3 / MinIO ---
         .config("spark.hadoop.fs.s3a.endpoint", "http://minio:9000")
         .config("spark.hadoop.fs.s3a.access.key", "minio")
         .config("spark.hadoop.fs.s3a.secret.key", "minio123")
         .config("spark.hadoop.fs.s3a.path.style.access", "true")
         .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
-        # --- Rozszerzenia Iceberg ---
         .config(
             "spark.sql.extensions",
             "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions",
         )
-        # --- Wspólny Katalog Iceberg (JDBC / PostgreSQL) ---
         .config("spark.sql.catalog.iceberg", "org.apache.iceberg.spark.SparkCatalog")
         .config("spark.sql.catalog.iceberg.type", "jdbc")
         .config(
@@ -24,7 +21,6 @@ def prepare_spark_session():
         )
         .config("spark.sql.catalog.iceberg.jdbc.user", "admin")
         .config("spark.sql.catalog.iceberg.jdbc.password", "admin")
-        # Domyślny warehouse (wymagany przez SparkCatalog, ale właściwe ścieżki i tak kontroluje metastore)
         .config("spark.sql.catalog.iceberg.warehouse", "s3a://silver")
         .getOrCreate()
     )
@@ -35,9 +31,6 @@ def save_dataframe(df, full_table_name):
         df.writeTo(full_table_name).tableProperty("format-version", "2").create()
     else:
         df.writeTo(full_table_name).append()
-
-
-# def create_rentals_enriched():
 
 
 def prepare_silver_namespace(spark):
@@ -93,21 +86,19 @@ def create_or_append_rentals_enriched_err_tables(
 ):
 
     if not latest_rentals_snapshot_id:
-        print("Tabela iceberg.bronze.rentals jest pusta. Przerwanie procesu.")
+        print("Table iceberg.bronze.rentals is empty. Process stop.")
         return
 
     if last_rentals_snapshot_id == latest_rentals_snapshot_id:
-        print("Brak nowych danych w iceberg.bronze.rentals do przetworzenia.")
+        print("No new data to process in iceberg.bronze.rentals.")
         return
 
     if last_rentals_snapshot_id is None:
-        print(
-            "Pierwsze uruchomienie. Wczytywanie całej tabeli iceberg.bronze.rentals..."
-        )
+        print("First run. Reading whole table iceberg.bronze.rentals...")
         rental_df = spark.table("iceberg.bronze.rentals")
     else:
         print(
-            f"Wczytywanie przyrostowe z iceberg.bronze.rentals (od snapshotu {last_rentals_snapshot_id} do {latest_rentals_snapshot_id})..."
+            f"Reading data for incremental load to iceberg.bronze.rentals (since snapshot {last_rentals_snapshot_id} till {latest_rentals_snapshot_id})..."
         )
         rental_df = (
             spark.read.option("start-snapshot-id", last_rentals_snapshot_id)
@@ -170,7 +161,6 @@ def create_or_append_rentals_enriched_err_tables(
         )
     )
 
-    # 1. Tworzymy definicje testów DQ za pomocą reguł warunkowych (ARRAY z błędami)
     dq_checks = F.array_except(
         F.array(
             F.when(F.col("rental_id").isNull(), "RENTAL_ID_NULL"),
@@ -193,7 +183,7 @@ def create_or_append_rentals_enriched_err_tables(
             "start_time",
             "end_time",
             "rental_duration_minutes",
-            "rental_errors_arr",  # Tablica ze znalezionymi błędami, np. ["INVALID_DURATION", "UNMATCHED_BIKE_ID"]
+            "rental_errors_arr",
             "rejected_at",
         )
     )
@@ -205,7 +195,7 @@ def create_or_append_rentals_enriched_err_tables(
     save_dataframe(df_clean, "iceberg.silver.rentals_enriched")
 
     print(
-        f"Aktualizacja checkpointu dla iceberg.bronze.rentals do snapshotu {latest_rentals_snapshot_id}..."
+        f"Checkpoint update for iceberg.bronze.rentals snapshot {latest_rentals_snapshot_id}..."
     )
 
     spark.sql(f"""
@@ -224,7 +214,7 @@ def create_or_append_rentals_enriched_err_tables(
             VALUES (source.table_name, source.last_processed_snapshot_id, source.updated_at)
     """)
 
-    print("--- SUKCES: Proces przyrostowy zakończony ---")
+    print("--- SUCCESS: Incremental run completed. ---")
 
 
 if __name__ == "__main__":
