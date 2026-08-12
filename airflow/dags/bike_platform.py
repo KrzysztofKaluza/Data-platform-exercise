@@ -14,8 +14,6 @@ with DAG(
 ) as dag:
     start = BashOperator(task_id="start", bash_command="echo START")
 
-    docker_test = BashOperator(task_id="docker_test", bash_command="docker ps")
-
     bronze = BashOperator(
         task_id="bronze_layer",
         bash_command=(
@@ -47,13 +45,4 @@ with DAG(
 
     end = BashOperator(task_id="end", bash_command="echo END")
 
-    (
-        start
-        >> docker_test
-        >> bronze
-        >> silver
-        >> dbt_run
-        >> dbt_test
-        >> dbt_docs_generate
-        >> end
-    )
+    (start >> bronze >> silver >> dbt_run >> dbt_test >> dbt_docs_generate >> end)
